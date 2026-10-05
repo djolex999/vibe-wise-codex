@@ -1,15 +1,20 @@
 """Exercise the installed context CLI without relying on lifecycle hooks."""
 
+import importlib.util
 import json
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "skills/vibe-wise/scripts/context.py"
+spec = importlib.util.spec_from_file_location("vibe_wise_context", SCRIPT)
+context_module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(context_module)
 
 
 class ContextTests(unittest.TestCase):
@@ -83,6 +88,14 @@ class ContextTests(unittest.TestCase):
                 (child / ".git").mkdir()
             self.assertEqual(self.run_context(child)["status"], "no_notes")
 
+    def test_broken_git_symlink_stops_parent_lookup(self):
+        state = self.notes()
+        child = self.project / "broken worktree"
+        child.mkdir()
+        (child / ".git").symlink_to(self.root / "missing-gitdir")
+        self.assertEqual(self.run_context(child)["status"], "no_notes")
+        self.assertEqual(self.run_context()["state"], str(state))
+
     def test_missing_companion_files_do_not_disable_learning(self):
         state = self.notes()
         (state / "project-map.md").unlink()
@@ -113,9 +126,40 @@ class ContextTests(unittest.TestCase):
         (state / "profile.md").write_bytes(b"\xff")
         self.assertEqual(self.run_context(ok=False)["status"], "error")
 
+    def test_paused_profile_with_invalid_trailing_text_reports_error(self):
+        state = self.notes(mode="paused")
+        (state / "profile.md").write_bytes(b"Learning mode: paused\n" + b"older note\n" * 1000 + b"\xff")
+        self.assertEqual(self.run_context(ok=False)["status"], "error")
+
+    def test_profile_read_failure_is_not_treated_as_paused(self):
+        state = self.notes()
+        with patch.object(Path, "open", side_effect=PermissionError("profile unavailable")):
+            with self.assertRaises(PermissionError):
+                context_module.profile_is_active(state / "profile.md")
+
+    def test_inaccessible_candidate_does_not_fall_back_to_parent_notes(self):
+        self.notes()
+        child = self.project / "restricted package"
+        child.mkdir()
+        lstat = Path.lstat
+
+        def deny_child_state(path):
+            if path == child / ".vibe-wise":
+                raise PermissionError("state unavailable")
+            return lstat(path)
+
+        with patch.object(Path, "lstat", deny_child_state):
+            with self.assertRaises(PermissionError):
+                context_module.inspect(child)
+
     def test_linked_state_does_not_follow_or_fall_back(self):
         self.notes(legacy=True)
         (self.project / ".vibe-wise").symlink_to(self.root / "missing")
+        self.assertEqual(self.run_context(ok=False)["status"], "error")
+
+    def test_file_at_state_path_does_not_fall_back_to_legacy_notes(self):
+        self.notes(legacy=True)
+        (self.project / ".vibe-wise").write_text("invalid state path\n")
         self.assertEqual(self.run_context(ok=False)["status"], "error")
 
     def test_linked_and_non_regular_notes_report_errors(self):

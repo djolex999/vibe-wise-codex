@@ -23,5 +23,6 @@ schema migration or repeating completed onboarding.
 For incomplete onboarding, ask only unresolved relevant questions. After a reset
 (`Onboarding reset: pending`), use only answers supplied since reset; remove the
 marker when complete. Backup notes are history, not current preferences. Record
-known answers before yielding and mark onboarding complete once enough is known to
+known answers before yielding; while waiting, set `Onboarding: incomplete` and list
+unresolved relevant questions. Mark onboarding complete once enough is known to
 begin. Optional customization can happen later through ordinary conversation.

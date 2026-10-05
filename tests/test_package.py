@@ -36,6 +36,33 @@ class PackageTests(unittest.TestCase):
                     self.assertTrue(target.is_relative_to(SKILL.resolve()))
                     self.assertTrue(target.is_file(), str(target))
 
+    def test_distribution_metadata_and_icons_are_complete(self):
+        manifest = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
+        self.assertRegex(manifest["version"], r"^\d+\.\d+\.\d+$")
+        interface = manifest["interface"]
+        for field, limit in (("displayName", 30), ("shortDescription", 30),
+                             ("longDescription", 4000), ("developerName", 80)):
+            value = interface[field]
+            self.assertIsInstance(value, str)
+            self.assertTrue(value.strip())
+            self.assertLessEqual(len(value), limit)
+        self.assertEqual(interface["category"], "Productivity")
+        self.assertIsInstance(interface["capabilities"], list)
+        for field in ("logo", "composerIcon"):
+            asset = interface[field]
+            self.assertTrue(asset.startswith("./"))
+            self.assertNotIn("..", Path(asset).parts)
+            image = ROOT / asset
+            self.assertTrue(image.is_file())
+            data = image.read_bytes()
+            self.assertLessEqual(len(data), 5 * 1024 * 1024)
+            self.assertEqual(data[:8], b"\x89PNG\r\n\x1a\n")
+            width = int.from_bytes(data[16:20], "big")
+            height = int.from_bytes(data[20:24], "big")
+            self.assertEqual(width, height)
+            self.assertGreaterEqual(width, 48)
+            self.assertLessEqual(width, 4096)
+
     def test_independently_installed_skill_previews_and_resets_project_notes(self):
         with tempfile.TemporaryDirectory(prefix="vibe-wise-install-") as temp:
             base = Path(temp).resolve()

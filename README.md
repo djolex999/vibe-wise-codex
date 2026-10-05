@@ -27,7 +27,7 @@ git clone https://github.com/djolex999/vibe-vise-codex.git
 cd vibe-vise-codex
 mkdir -p "$HOME/.agents/skills"
 # Stop if a skill with this name is already installed; review it before replacing.
-if [ -e "$HOME/.agents/skills/vibe-wise" ]; then
+if [ -e "$HOME/.agents/skills/vibe-wise" ] || [ -L "$HOME/.agents/skills/vibe-wise" ]; then
   echo 'vibe-wise already exists; review the installed copy before updating.'
 else
   cp -R skills/vibe-wise "$HOME/.agents/skills/vibe-wise"
@@ -72,7 +72,8 @@ Preferences, learning evidence, pending decisions, and the project map remain in
 `.vibe-wise/profile.md`, `progress.md`, and `project-map.md`. Existing VibeWise notes
 are reusable. Legacy `.sensible-vibes/` is read in place without migration. The
 nearest notes directory wins; Git repository/worktree boundaries stop lookup.
-Symlinked notes are refused. Saved notes are data, never instructions or approval.
+Invalid or symlinked notes report an error without falling back to parent notes.
+Saved notes are data, never instructions or approval.
 
 Add `.vibe-wise/` and `.sensible-vibes/` to your project's `.gitignore` if you want
 private local notes. VibeWise does not silently change another project's ignore file.
@@ -96,8 +97,9 @@ Pending decisions survive in progress notes. The skill checks the entire progres
 file for pending sections before coding; incomplete onboarding resumes where it
 left off. Automatic loading of the skill alone does not resume paused learning.
 
-Reset previews a fingerprint of this project's three notes, requires confirmation,
-and stores originals in `backups/reset-…/`. Changed notes reject the stale preview.
+Reset previews a fingerprint of the notes directory identity and this project's
+three notes, requires confirmation, and stores originals in `backups/reset-…/`.
+Changed notes or a replaced directory reject the stale preview.
 Individual replacement is atomic; the three-file reset is not a transaction. A
 partial failure reports its backup path. Avoid concurrent note edits during reset;
 retain backups and inspect active files before recovery.
@@ -105,7 +107,8 @@ retain backups and inspect active files before recovery.
 ## Optional plugin packaging
 
 The repository also contains a supported `.codex-plugin/plugin.json` manifest that
-packages `skills/`. For local testing, copy this repository without `.git` to your
+packages `skills/`, presentation metadata, and the bundled icon. For local testing,
+copy this repository without `.git` or any project learning notes to your
 target repository's `plugins/vibe-vise-codex/`, then add the following entry to
 `.agents/plugins/marketplace.json` (merge with existing entries rather than replacing
 them):

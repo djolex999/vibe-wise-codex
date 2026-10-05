@@ -20,8 +20,8 @@ FRESH = {
     "profile.md": (
         "# Learner Profile\n\nLearning mode: active\nOnboarding: incomplete\n"
         "Onboarding reset: pending\n\n"
-        "Remaining onboarding: Project situation, experience, stack familiarity, "
-        "goals, and preferences.\n"
+        "Remaining onboarding: Current task, relevant familiarity, and learning "
+        "focus where unknown.\n"
     ),
     "progress.md": "# Learning Progress\n\nNo learning events recorded yet.\n",
     "project-map.md": "# Project Map\n\nNot mapped yet. Inspect the current project.\n",
@@ -32,6 +32,9 @@ def snapshot(cwd):
     state = state_directory(cwd)
     if state is None:
         return None, {}, None
+    identity = state.lstat()
+    if not stat.S_ISDIR(identity.st_mode):
+        raise ValueError("Learning state must be a real directory: " + str(state))
     notes = {}
     for name in FRESH:
         path = state / name
@@ -44,7 +47,7 @@ def snapshot(cwd):
         notes[name] = path.read_bytes()
     # Include identity, missing files, and content so confirmation cannot drift
     # to another project or silently discard notes updated by another session.
-    digest = hashlib.sha256(str(state).encode())
+    digest = hashlib.sha256(json.dumps([str(state), identity.st_dev, identity.st_ino]).encode())
     for name in FRESH:
         data = notes.get(name)
         digest.update(json.dumps([name, None if data is None else data.hex()]).encode())

@@ -127,6 +127,15 @@ class ResetTests(unittest.TestCase):
                 (child / ".git").mkdir()
             self.assertEqual(self.preview(child)["status"], "no_notes")
 
+    def test_broken_git_symlink_does_not_preview_parent_notes(self):
+        state, originals = self.notes()
+        child = self.project / "broken worktree"
+        child.mkdir()
+        (child / ".git").symlink_to(self.root / "missing-gitdir")
+        self.assertEqual(self.preview(child)["status"], "no_notes")
+        self.assert_originals(state, originals)
+        self.assertFalse((state / "backups").exists())
+
     def test_no_state_and_empty_state_do_not_create_files(self):
         self.assertEqual(self.preview()["status"], "no_notes")
         self.assertEqual(list(self.project.iterdir()), [self.project / ".git"])
@@ -155,6 +164,20 @@ class ResetTests(unittest.TestCase):
         self.assertEqual((state / "progress.md").read_text(), "new understanding\n")
         self.assertFalse((state / "backups").exists())
 
+    def test_replaced_state_with_identical_notes_requires_fresh_confirmation(self):
+        state, originals = self.notes()
+        token = self.preview()["confirmation"]
+        archived = state.with_name("archived notes")
+        state.rename(archived)
+        state.mkdir()
+        for name, data in originals.items():
+            (state / name).write_bytes(data)
+        with self.assertRaisesRegex(ValueError, "changed"):
+            reset_module.reset(self.project, token)
+        self.assert_originals(state, originals)
+        self.assert_originals(archived, originals)
+        self.assertFalse((state / "backups").exists())
+
     def test_confirmation_cannot_target_a_different_project(self):
         self.notes()
         other = self.root / "another-project"
@@ -170,8 +193,37 @@ class ResetTests(unittest.TestCase):
         outside.mkdir()
         target, originals = self.notes(outside)
         (self.project / ".vibe-wise").symlink_to(target, target_is_directory=True)
-        self.assertEqual(self.preview()["status"], "no_notes")
+        with self.assertRaisesRegex(ValueError, "real directory"):
+            self.preview()
         self.assert_originals(target, originals)
+
+    def test_invalid_preferred_state_never_resets_legacy_or_parent_notes(self):
+        parent, parent_originals = self.notes()
+        for kind in ("file", "broken link"):
+            child = self.project / kind
+            child.mkdir()
+            legacy, originals = self.notes(child, legacy=True)
+            invalid = child / ".vibe-wise"
+            if kind == "file":
+                invalid.write_text("invalid state path\n")
+            else:
+                invalid.symlink_to(self.root / "missing")
+            with self.assertRaisesRegex(ValueError, "real directory"):
+                self.preview(child)
+            self.assert_originals(legacy, originals)
+            self.assertFalse((legacy / "backups").exists())
+        self.assert_originals(parent, parent_originals)
+        self.assertFalse((parent / "backups").exists())
+
+    def test_invalid_state_cli_returns_a_structured_error(self):
+        (self.project / ".vibe-wise").symlink_to(self.root / "missing")
+        result = subprocess.run(
+            [sys.executable, "-B", str(SCRIPT), "--cwd", str(self.project)],
+            capture_output=True, text=True, timeout=5,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(result.stderr, "")
+        self.assertEqual(json.loads(result.stdout)["status"], "error")
 
     def test_non_regular_notes_rejected(self):
         state, _ = self.notes()
@@ -209,6 +261,27 @@ class ResetTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "did not complete"):
                 self.confirm()
         self.assert_originals(state, originals)
+
+    def test_notes_changed_during_backup_are_not_replaced(self):
+        state, originals = self.notes()
+        write_text = Path.write_text
+        changed = "new understanding\n"
+
+        def change_notes_after_preparing_backup(path, text, **kwargs):
+            result = write_text(path, text, **kwargs)
+            if path.name == ".new-project-map.md":
+                write_text(state / "progress.md", changed)
+            return result
+
+        with patch.object(Path, "write_text", change_notes_after_preparing_backup):
+            with self.assertRaisesRegex(ValueError, "Notes changed during backup"):
+                self.confirm()
+        self.assertEqual((state / "progress.md").read_text(), changed)
+        for name in ("profile.md", "project-map.md"):
+            self.assertEqual((state / name).read_bytes(), originals[name])
+        backups = list((state / "backups").iterdir())
+        self.assertEqual(len(backups), 1)
+        self.assert_originals(backups[0], originals)
 
     def test_replacement_failure_keeps_complete_backup_and_reports_failure(self):
         state, originals = self.notes()
