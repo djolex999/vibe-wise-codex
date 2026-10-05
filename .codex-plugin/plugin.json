@@ -1,11 +1,11 @@
 {
-  "name": "vibe-vise-codex",
+  "name": "vibe-wise-codex",
   "version": "1.0.1",
   "description": "Learn software design with adaptive checkpoints while Codex writes the agreed code.",
   "author": {
     "name": "djolex999"
   },
-  "repository": "https://github.com/djolex999/vibe-vise-codex",
+  "repository": "https://github.com/djolex999/vibe-wise-codex",
   "license": "MIT",
   "skills": "./skills/",
   "interface": {

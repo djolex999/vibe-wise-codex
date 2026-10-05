@@ -17,7 +17,7 @@ SKILL = ROOT / "skills/vibe-wise"
 class PackageTests(unittest.TestCase):
     def test_manifest_resolves_skill_and_license_is_preserved(self):
         manifest = json.loads((ROOT / ".codex-plugin/plugin.json").read_text())
-        self.assertEqual(manifest["name"], "vibe-vise-codex")
+        self.assertEqual(manifest["name"], "vibe-wise-codex")
         self.assertEqual(manifest["license"], "MIT")
         skill_path = manifest["skills"]
         self.assertTrue(skill_path.startswith("./"))

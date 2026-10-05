@@ -1,4 +1,4 @@
-# vibe-vise-codex
+# vibe-wise-codex
 
 A Codex-native fork of [VibeWise](https://github.com/nykooi1/vibe-wise).
 You shape the design; Codex writes and checks the agreed code. Learning effort scales
@@ -23,8 +23,8 @@ the standard library; there is no account, backend, MCP server, or telemetry.
 Clone this fork and copy its self-contained skill to Codex's user skill directory:
 
 ```sh
-git clone https://github.com/djolex999/vibe-vise-codex.git
-cd vibe-vise-codex
+git clone https://github.com/djolex999/vibe-wise-codex.git
+cd vibe-wise-codex
 mkdir -p "$HOME/.agents/skills"
 # Stop if a skill with this name is already installed; review it before replacing.
 if [ -e "$HOME/.agents/skills/vibe-wise" ] || [ -L "$HOME/.agents/skills/vibe-wise" ]; then
@@ -109,7 +109,7 @@ retain backups and inspect active files before recovery.
 The repository also contains a supported `.codex-plugin/plugin.json` manifest that
 packages `skills/`, presentation metadata, and the bundled icon. For local testing,
 copy this repository without `.git` or any project learning notes to your
-target repository's `plugins/vibe-vise-codex/`, then add the following entry to
+target repository's `plugins/vibe-wise-codex/`, then add the following entry to
 `.agents/plugins/marketplace.json` (merge with existing entries rather than replacing
 them):
 
@@ -119,8 +119,8 @@ them):
   "interface": { "displayName": "Local Learning" },
   "plugins": [
     {
-      "name": "vibe-vise-codex",
-      "source": { "source": "local", "path": "./plugins/vibe-vise-codex" },
+      "name": "vibe-wise-codex",
+      "source": { "source": "local", "path": "./plugins/vibe-wise-codex" },
       "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
       "category": "Productivity"
     }
