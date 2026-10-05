@@ -11,7 +11,7 @@ from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "skills/reset/reset.py"
+SCRIPT = ROOT / "skills/vibe-wise/scripts/reset.py"
 spec = importlib.util.spec_from_file_location("vibe_wise_reset", SCRIPT)
 reset_module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(reset_module)
@@ -86,17 +86,15 @@ class ResetTests(unittest.TestCase):
         self.assertEqual((state / "custom.md").read_text(), "keep this\n")
         self.assert_originals(other, other_originals)
         self.assertTrue((self.project / ".git").is_dir())
-        hook = subprocess.run(
-            [sys.executable, "-B", str(ROOT / "hooks/session_start.py")],
-            input=json.dumps({"hook_event_name": "SessionStart", "source": "compact",
-                              "cwd": str(self.project)}),
+        context = subprocess.run(
+            [sys.executable, "-B", str(ROOT / "skills/vibe-wise/scripts/context.py"),
+             "--cwd", str(self.project)],
             text=True, capture_output=True, check=True,
         )
-        context = json.loads(hook.stdout)["hookSpecificOutput"]["additionalContext"]
-        self.assertIn(str(state), context)
-        self.assertIn("Read profile.md and project-map.md", context)
-        self.assertIn("If onboarding is incomplete", context)
-        self.assertNotIn("Awaiting implementation approval", context)
+        metadata = json.loads(context.stdout)
+        self.assertEqual(metadata["status"], "active")
+        self.assertEqual(metadata["state"], str(state))
+        self.assertEqual(set(metadata["files"]), set(originals))
 
     def test_nested_directory_and_legacy_notes(self):
         state, originals = self.notes(legacy=True)

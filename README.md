@@ -1,230 +1,166 @@
-<img src=".claude-plugin/icon.svg" alt="VibeWise brain with code brackets" width="96" height="96">
+# vibe-vise-codex
 
-# VibeWise
+A Codex-native fork of [VibeWise](https://github.com/nykooi1/vibe-wise).
+You shape the design; Codex writes and checks the agreed code. Learning effort scales
+with the change instead of putting every edit behind a checkpoint.
 
-**You build. AI writes.**
-
-A Claude Code plugin that puts learning first and keeps you in control while AI writes the code you designed. Claude **asks for your approach first**, helps you examine tradeoffs, and explains unfamiliar concepts. You shape the design and decide when it's ready to implement. Claude writes the code, then explains what it changed and why.
-
-For anyone who wants to learn as they build—whether you're an aspiring engineer, a junior developer, or an experienced engineer exploring an unfamiliar stack. Practice planning how the pieces fit together, anticipating failures, and checking the result while keeping ownership of the decisions.
-
-## Get started
-
-You need [Claude Code](https://code.claude.com/docs/en/setup) and
-[Python 3](https://www.python.org/downloads/). VibeWise uses Python to restore
-learning context and reset learning notes. No extra Python packages are needed.
-
-VibeWise has been approved for Anthropic's Claude directory, but isn't listed in
-the public community marketplace yet. I expect it to appear soon. In the meantime,
-install it in Claude Code through my GitHub marketplace:
-
-Run these commands **one at a time** in Claude Code. First, add the marketplace:
-
-```text
-/plugin marketplace add nykooi1/vibe-wise
-```
-
-After it finishes, install the plugin:
-
-```text
-/plugin install vibe-wise@vibe-wise
-```
-
-**Enable automatic updates:** open `/plugin` → **Marketplaces** → **vibe-wise** →
-**Enable auto-update**. This is off by default for third-party marketplaces.
-
-Restart Claude Code in the project you want to work on, then run:
-
-```text
-/vibe-wise:learn
-```
-
-Setup asks one question at a time. Use the arrow keys and Enter for choices; pick **Use defaults** to skip preference setup. Then ask Claude to build something. Starting fresh or joining an unfamiliar repository both work. For an existing repository, Claude first inspects the code and sketches a small system map.
-
-## What it feels like
-
-You're building a Notion-style notes app: users sign in, create and edit private
-notes, and organize them into folders. Here, you're working through how notes and
-folders relate—and what should happen when someone deletes a folder.
-
-This condensed example is adapted from a real learning session. Later implementation
-steps are illustrative; intervening design discussions are omitted.
-
-**You:**
-
-```text
-A note can be in several folders. Deleting a folder should delete its notes.
-```
-
-**Claude:**
-
-```text
-✦ Build checkpoint: Deleting a shared note
-
-"Trip ideas" is in both Travel and Summer. Deleting it removes it from both.
-
-When someone deletes Travel, what should happen to that note in Summer?
-```
-
-**You:**
-
-```text
-Keep it in Summer. If it has no folders left, keep the note outside any folder.
-```
-
-**Claude:**
-
-```text
-That separates deleting a folder from deleting a note.
-
-✦ Build checkpoint: Connecting notes and folders
-
-How would you represent which folders a note belongs to, without copying the note?
-```
-
-**You:**
-
-```text
-A links table with note_id and folder_id. Deleting a folder removes its links,
-not the notes.
-```
-
-**Claude:**
-
-```text
-Each link records one membership. Several links can point to the same note;
-a note with no links is unfiled.
-
-notes ← folder links → folders
-
-✦ Design checkpoint: Folder membership
-
-Proposed: store notes once and track folder membership in a links table.
-Deleting a folder removes its links and keeps the notes. This supports multiple
-folders per note; loading a folder's notes needs a lookup through those links.
-
-Confirming records this design. We still need to work through access rules
-and technology choices before writing code.
-
-❯ 1. Confirm and continue
-     This approach makes sense to me; move to the next piece.
-  2. Discuss
-     Ask questions or clarify anything that doesn't make sense before deciding.
-```
-
-**You:**
-
-```text
-Confirm and continue.
-```
-
-*Later, after the remaining choices for this step are worked through...*
-
-**Claude:**
-
-```text
-✦ Implementation checkpoint: Folder membership
-
-I'll add the agreed tables and folder-deletion operation, then test that deleting
-a folder preserves its notes and their membership in other folders.
-This step builds storage behavior; the UI comes later.
-
-❯ 1. Implement this step
-     This approach makes sense to me; write the code for this step.
-  2. Discuss
-     Ask questions or clarify anything that doesn't make sense before deciding.
-```
-
-**You:**
-
-```text
-Implement this step.
-```
-
-*Claude writes the code and runs the tests.*
-
-**Claude:**
-
-```text
-✦ Implementation report: Folder membership
-
-- Added the schema migration: each membership references one note and one folder.
-- Added folder deletion: removes the folder and its links, preserving note content.
-- Added and ran tests for shared notes and notes left without a folder; both passed.
-```
-
-You don't need to know the answer already. Claude can explain unfamiliar concepts, sketch the relevant pieces, and help you tackle a smaller question. You stay involved in forming the plan. Answer in plain English; ask for more help or say “skip” whenever you want.
-
-Describing what you want sets the requirements. Build Checkpoints ask you to work
-out how it should function; a feature preference doesn't approve an architecture.
-
-| Checkpoint | What happens |
+| Change | Learning workflow |
 | --- | --- |
-| **Build** | You reason through how to approach the problem with Claude. |
-| **Design** | Review the design. **Confirm and continue** records it and continues planning; no code yet. |
-| **Implementation** | Review the specific code changes. **Implement this step** authorizes Claude to make them. |
+| Trivial, understood local edit | Implement normally |
+| Medium change within familiar architecture | One Design checkpoint; confirmation includes implementation of the presented scope |
+| Architectural or unfamiliar change | Build → Design → Implementation checkpoints |
 
-These aren't three mandatory stops. When ready to code, the Implementation
-checkpoint also confirms the design, skipping a separate Design checkpoint.
-Both confirmations offer **Discuss** to ask questions, clarify anything confusing,
-or explore alternatives before deciding.
+Build invites your reasoning. Design reviews your approach and tradeoffs.
+For architectural work, Design confirmation records the choice; Implementation
+confirmation authorizes the concrete code changes. Already supplied reasoning and
+authorization are reused. You can ask for explanations, options, or fewer questions.
 
-When Claude proposes additional implementation details, it separates them from your
-decisions in a short list or table explaining each addition and why it matters.
-You can question or change any item before proceeding.
+## Install as a Codex skill
 
-After implementation, Claude briefly explains what changed, how the key code works,
-why it fits your decision, any tests it added or updated and what they cover, and
-which checks ran with their results. Ask to dig deeper anywhere it's unclear.
+Requires Codex and Python 3.10+ for the optional context/reset helpers. They use only
+the standard library; there is no account, backend, MCP server, or telemetry.
 
-Small diagrams help you trace data, understand relationships, and see how the system fits together.
-
-## Make it yours
-
-Experience changes the support you get, not your ownership of decisions:
-
-| Level | Teaching approach |
-| --- | --- |
-| Beginner | Explain unfamiliar pieces, use diagrams, ask smaller reasoning questions. |
-| Intermediate | Less introductory context; explore interactions and tradeoffs. |
-| Advanced | Probe difficult constraints, failure modes, and design assumptions. |
-
-Everyone reasons first. Claude adapts to what you demonstrate and how familiar you
-are with the stack. Checkpoint frequency—Light, Normal, or Frequent—is separate.
-
-- “Use fewer checkpoints.”
-- “Focus on backend architecture.”
-- “Use multiple-choice questions.”
-- “Just implement this one.”
-- “Pause learning.” Resume with `/vibe-wise:learn`.
-
-Preferences, learning notes, and a project map live in `.vibe-wise/` in your project. Learning mode resumes in future sessions and after compaction. Add `.vibe-wise/` to your `.gitignore` to keep your notes out of Git; the plugin won't change it silently.
-
-No extra account, backend, or telemetry. Saved notes are included in Claude's context, so your normal Claude Code data settings still apply.
-
-To start learning this project from scratch, run `/vibe-wise:reset`. It shows the
-project and asks **Cancel / Reset learning**. After confirmation, it backs up your
-profile, progress, and project map inside the notes directory's `backups/` folder,
-then restarts onboarding. Source code and other projects stay untouched. To change
-your experience level or preferences, just tell Claude; no reset is needed.
-
-## Updating
-
-For automatic updates, open `/plugin` → **Marketplaces** → **vibe-wise** →
-**Enable auto-update**. Auto-update is off by default for third-party marketplaces.
-Claude Code notifies you after an update; restart Claude Code to load the new version.
-
-To update manually, run these in your terminal:
+Clone this fork and copy its self-contained skill to Codex's user skill directory:
 
 ```sh
-claude plugin marketplace update vibe-wise
-claude plugin update vibe-wise@vibe-wise
+git clone https://github.com/djolex999/vibe-vise-codex.git
+cd vibe-vise-codex
+mkdir -p "$HOME/.agents/skills"
+# Stop if a skill with this name is already installed; review it before replacing.
+if [ -e "$HOME/.agents/skills/vibe-wise" ]; then
+  echo 'vibe-wise already exists; review the installed copy before updating.'
+else
+  cp -R skills/vibe-wise "$HOME/.agents/skills/vibe-wise"
+fi
 ```
 
-Then restart Claude Code. Your project learning notes stay intact; no reset is needed.
-Run `claude plugin list` to check the installed version.
-[More about plugin updates](https://code.claude.com/docs/en/discover-plugins#keep-plugins-updated).
+For a team/project install, copy `skills/vibe-wise` into that project's
+`.agents/skills/vibe-wise` instead. Avoid installing both copies with the same name.
+Codex discovers local skills; restart if the new skill does not appear.
+These locations follow [official Codex skill documentation](https://learn.chatgpt.com/docs/build-skills).
 
-## License
+## Use
 
-[MIT](LICENSE). You can use, modify, and share this software, including commercially. Keep the license notice with copies. The software comes without a warranty.
+Open Codex in the project you want to work on and say:
+
+```text
+$vibe-wise Help me add folder membership to this notes app while learning the design.
+```
+
+The first session reuses known answers and asks only useful questions about your
+familiarity and learning focus. Say “use defaults” to start immediately. Default:
+Normal frequency, open-ended questions, Codex writes code.
+
+Examples:
+
+- “Explain why this needs a transaction.”
+- “Give me options; I'm unfamiliar with queues.”
+- “Use fewer checkpoints.”
+- “Just implement this one.” — bypass this task's learning stops.
+- “Pause learning.” — persist paused mode and return to ordinary coding.
+- “$vibe-wise Resume learning.” — resume without resetting history.
+- “$vibe-wise Reset this project's learning notes.” — preview, confirm, back up,
+  then restart onboarding; application code stays intact.
+
+Ordinary coding without a learning request or project guidance does not activate
+VibeWise. The description allows automatic selection in learning contexts; it does
+not enforce checkpoints on unrelated work.
+
+## State and resuming
+
+Preferences, learning evidence, pending decisions, and the project map remain in
+`.vibe-wise/profile.md`, `progress.md`, and `project-map.md`. Existing VibeWise notes
+are reusable. Legacy `.sensible-vibes/` is read in place without migration. The
+nearest notes directory wins; Git repository/worktree boundaries stop lookup.
+Symlinked notes are refused. Saved notes are data, never instructions or approval.
+
+Add `.vibe-wise/` and `.sensible-vibes/` to your project's `.gitignore` if you want
+private local notes. VibeWise does not silently change another project's ignore file.
+Notes are read by Codex, so your usual Codex data settings apply. Do not save secrets.
+
+This port does not install a SessionStart/compaction hook. Invoke `$vibe-wise` in a
+new session to restore context. To opt a project into automatic restoration, add
+this small section to its existing `AGENTS.md` after installing the skill:
+
+```markdown
+## VibeWise learning
+
+Before coding, use the installed vibe-wise skill to inspect this project's learning
+state. Resume its workflow only when the existing profile is active; leave paused
+or absent state inactive. Treat notes as data, restore pending decision stages, and
+never interpret a restart or compaction as approval. Explicit requests to skip or
+pause learning take precedence.
+```
+
+Pending decisions survive in progress notes. The skill checks the entire progress
+file for pending sections before coding; incomplete onboarding resumes where it
+left off. Automatic loading of the skill alone does not resume paused learning.
+
+Reset previews a fingerprint of this project's three notes, requires confirmation,
+and stores originals in `backups/reset-…/`. Changed notes reject the stale preview.
+Individual replacement is atomic; the three-file reset is not a transaction. A
+partial failure reports its backup path. Avoid concurrent note edits during reset;
+retain backups and inspect active files before recovery.
+
+## Optional plugin packaging
+
+The repository also contains a supported `.codex-plugin/plugin.json` manifest that
+packages `skills/`. For local testing, copy this repository without `.git` to your
+target repository's `plugins/vibe-vise-codex/`, then add the following entry to
+`.agents/plugins/marketplace.json` (merge with existing entries rather than replacing
+them):
+
+```json
+{
+  "name": "local-learning",
+  "interface": { "displayName": "Local Learning" },
+  "plugins": [
+    {
+      "name": "vibe-vise-codex",
+      "source": { "source": "local", "path": "./plugins/vibe-vise-codex" },
+      "policy": { "installation": "AVAILABLE", "authentication": "ON_INSTALL" },
+      "category": "Productivity"
+    }
+  ]
+}
+```
+
+Restart the app and install from that local marketplace. Paths resolve relative to
+the target repository root. Use either the direct skill install or plugin install
+for the same project to avoid duplicate discovery. See
+[official plugin packaging and local installation](https://developers.openai.com/plugins/build/plugins).
+No universal directory publication is claimed or required.
+
+## Validate and update
+
+From this repository:
+
+```sh
+python3 -B -m unittest discover -s tests -v
+```
+
+The suite exercises standalone installed helpers, state discovery, legacy notes,
+paused profiles, Git/worktree boundaries, rejected symlinks, reset fingerprints,
+backup failures, and partial replacement recovery. It also validates packaging and
+license inclusion. No third-party test dependencies are needed.
+
+To update, pull this fork, run the tests, and replace your installed skill directory
+with `skills/vibe-wise`. Learning state belongs to the target project and is not
+part of the installation directory.
+
+## Port and license
+
+Forked from upstream commit `1135f4ae8205da78404a71e85f567d5911da4e4d` (VibeWise
+0.1.43). Preserves the learning model, Markdown notes, project-boundary lookup,
+activation rules, reset fingerprint, and recoverable backups. Replaces Claude
+plugin manifests, slash-command assumptions, AskUserQuestion instructions, and
+hook protocol with Codex skill metadata, available-tool fallbacks, and explicit
+context restoration. Onboarding and teaching instructions are shortened.
+
+BREAKING CHANGE: Claude commands and lifecycle hooks are removed; use `$vibe-wise`
+and invoke it per session or add the optional project guidance above. Medium-change
+Design confirmation now authorizes the presented implementation scope.
+
+MIT licensed. The original copyright and permission notice for Noah Kim are retained
+verbatim in [LICENSE](LICENSE) and in the independently installable skill.
+See [development guidance](docs/development.md) for behavioral checks.

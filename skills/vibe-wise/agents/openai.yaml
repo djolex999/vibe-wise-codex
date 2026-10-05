@@ -1,0 +1,4 @@
+interface:
+  display_name: "VibeWise for Codex"
+  short_description: "Learn design while Codex writes agreed code"
+  default_prompt: "Use $vibe-wise to help me learn as we build or change this project."

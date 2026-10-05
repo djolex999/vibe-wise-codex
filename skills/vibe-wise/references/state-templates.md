@@ -3,7 +3,7 @@
 Create only these three files in the chosen project's `.vibe-wise/`, or its existing
 legacy `.sensible-vibes/` when resuming. Use the directory selected by SKILL.md.
 Replace bracketed values with actual evidence or “Not specified.” Keep the two
-status lines unformatted and near the top; the restoration hook reads them.
+status lines unformatted and near the top; the context helper reads activation status.
 Do not replace existing state with a fresh template.
 
 ## profile.md
@@ -55,7 +55,7 @@ As learning occurs, add a `## Topic` with concise bullets under Introduced,
 Demonstrated understanding, and Needs reinforcement. Record reasoning evidence,
 not quotations of a whole exchange. Product preferences establish requirements;
 they aren't evidence of engineering understanding. Keep learner-proposed reasoning
-distinct from concepts Claude explained. Consolidate repeated entries. Keep each
+distinct from concepts Codex explained. Consolidate repeated entries. Keep each
 topic independently readable so it can be loaded without the whole file.
 While waiting on a checkpoint, keep a short `## Pending decision` section
 with the proposed approach and what reply is awaited. Remove it once resolved.
@@ -64,7 +64,7 @@ confirmation, or implementation approval. Record confirmed choices in the map
 without claiming they are implemented. Keep any proposed coding scope explicit.
 Confirmation covers only the proposal presented. Don't append unmentioned fields,
 behaviors, rejected alternatives, or reasons to the chosen design. Mark unresolved
-details unknown and Claude's suggestions proposed; never attribute them to the learner.
+details unknown and Codex's suggestions proposed; never attribute them to the learner.
 
 ## project-map.md
 
