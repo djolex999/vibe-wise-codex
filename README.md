@@ -109,9 +109,11 @@ restart if the new skill does not appear. These locations follow the
 ### Plugin packaging (optional)
 
 The repository also contains a supported `.codex-plugin/plugin.json` manifest that
-packages `skills/`, presentation metadata, and the bundled icon. For local testing,
-copy this repository without `.git` or any project learning notes to your
-target repository's `plugins/vibe-wise-codex/`, then add the following entry to
+packages `skills/`, presentation metadata, the bundled icon, and an optional
+SessionStart context-restoration hook. Direct skill installation above remains the
+default and copies only `skills/vibe-wise`; it does not install or run the hook. For
+local testing, copy this repository without `.git` or any project learning notes to
+your target repository's `plugins/vibe-wise-codex/`, then add the following entry to
 `.agents/plugins/marketplace.json` (merge with existing entries rather than replacing
 them):
 
@@ -135,6 +137,16 @@ the target repository root. Use either the direct skill install or the plugin in
 for the same project to avoid duplicate discovery. See
 [official plugin packaging and local installation](https://developers.openai.com/plugins/build/plugins).
 
+Installing the plugin makes its bundled hook available in Codex Desktop. Codex
+requires you to review and trust the current hook definition before it runs; a
+changed definition requires review again. In the Codex CLI, run `/hooks` to inspect
+the hook, review and trust its definition, or disable it individually. `/hooks` is
+a CLI command, not a Desktop instruction; Desktop trust and lifecycle behavior for
+this plugin remains untested. Codex can run the plugin hook only where the plugin
+scripts are installed locally. See the
+[Codex hook documentation](https://learn.chatgpt.com/docs/hooks) for the current
+trust and hook controls.
+
 ## State and resuming
 
 Preferences, learning evidence, pending decisions, and the project map live in
@@ -148,9 +160,21 @@ Add `.vibe-wise/` and `.sensible-vibes/` to your project's `.gitignore` if you w
 private local notes. VibeWise does not silently change another project's ignore file.
 Notes are read by Codex, so your usual Codex data settings apply. Do not save secrets.
 
-Codex has no SessionStart or compaction hooks, so invoke `$vibe-wise` in a new
-session to restore context. To opt a project into automatic restoration, add this
-section to its existing `AGENTS.md` after installing the skill:
+With the direct skill-only install, invoke `$vibe-wise` in a new session to restore
+context. The optional plugin hook restores active context on SessionStart sources
+`startup`, `resume`, `clear`, and `compact`. It uses the existing context helper to
+find the nearest state, reads `profile.md` to check whether learning is active or
+paused, and checks the available note files. It does not read transcripts or the
+bodies of `progress.md` and `project-map.md`, and it returns only short instructions
+and paths. The helper's profile scan is used only to detect active or paused mode;
+profile text is never included in hook output. Missing or paused state, invalid note
+paths, and malformed, oversized, or unsupported event input produce no context. The
+hook is read-only, fails open, and shows no status message. Notes remain untrusted
+data. A startup, resume, clear, or compact event is never approval for a pending
+decision.
+
+To opt a project into automatic restoration without the plugin, add this section
+to its existing `AGENTS.md` after installing the skill:
 
 ```markdown
 ## VibeWise learning
@@ -183,8 +207,10 @@ python3 -B -m unittest discover -s tests -v
 
 The suite covers standalone installed helpers, state discovery, legacy notes,
 paused profiles, Git and worktree boundaries, rejected symlinks, reset fingerprints,
-backup failures, and partial replacement recovery. It also validates packaging and
-license inclusion. No third-party test dependencies are needed.
+backup failures, partial replacement recovery, and the opt-in plugin hook's
+deterministic input/output behavior. It also validates packaging and license
+inclusion. Codex Desktop trust prompts and lifecycle delivery require manual checks
+and are not covered by unit tests. No third-party test dependencies are needed.
 
 To update, pull this fork, run the tests, and replace your installed skill directory
 with `skills/vibe-wise`. Learning state belongs to the target project and is not
@@ -201,12 +227,14 @@ rules, reset fingerprint, and recoverable backups.
 
 **Changed:** Claude plugin manifests, slash commands, AskUserQuestion instructions,
 and the hook protocol are replaced with Codex skill metadata, available-tool
-fallbacks, and explicit context restoration. Onboarding and teaching instructions
-are shorter. Medium-change Design confirmation now authorizes the presented
-implementation scope.
+fallbacks, and explicit context restoration. A SessionStart hook is available only
+through the optional plugin package; the direct skill install stays hook-free.
+Onboarding and teaching instructions are shorter. Medium-change Design confirmation
+now authorizes the presented implementation scope.
 
-**Breaking:** Claude commands and lifecycle hooks are removed. Use `$vibe-wise` once
-per session, or add the optional `AGENTS.md` section above.
+**Breaking:** Claude commands and Claude-specific lifecycle hooks are removed. Use
+`$vibe-wise` once per session with a direct skill install, or use the optional plugin
+hook or `AGENTS.md` guidance above.
 
 ## Credits and license
 

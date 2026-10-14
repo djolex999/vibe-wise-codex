@@ -8,10 +8,11 @@
   "repository": "https://github.com/djolex999/vibe-wise-codex",
   "license": "MIT",
   "skills": "./skills/",
+  "hooks": "./hooks/hooks.json",
   "interface": {
     "displayName": "VibeWise for Codex",
     "shortDescription": "Learn design as Codex codes",
-    "longDescription": "Learn software design while Codex implements agreed changes. Adaptive checkpoints keep trivial edits direct, use one Design checkpoint for familiar bounded changes, and use Build, Design, and Implementation checkpoints for architectural or unfamiliar work. Learning notes stay in the project; invoke the skill to restore context in a new session.",
+    "longDescription": "Learn software design while Codex implements agreed changes. Adaptive checkpoints keep trivial edits direct, use one Design checkpoint for familiar bounded changes, and use Build, Design, and Implementation checkpoints for architectural or unfamiliar work. Learning notes stay in the project; this optional plugin includes a trust-reviewed SessionStart hook for restoring active context.",
     "developerName": "djolex999",
     "category": "Productivity",
     "capabilities": ["Learn software design", "Resume project learning", "Reset learning notes"],
