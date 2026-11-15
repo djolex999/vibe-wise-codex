@@ -23,10 +23,13 @@ class PackageTests(unittest.TestCase):
         self.assertTrue(skill_path.startswith("./"))
         self.assertNotIn("..", Path(skill_path).parts)
         self.assertTrue((ROOT / skill_path / "vibe-wise/SKILL.md").is_file())
+        self.assertEqual(manifest["hooks"], "./hooks/hooks.json")
+        self.assertTrue((ROOT / "hooks/hooks.json").is_file())
+        self.assertTrue((ROOT / "hooks/session_start.py").is_file())
         self.assertEqual((ROOT / "LICENSE").read_bytes(), (SKILL / "LICENSE").read_bytes())
         self.assertIn("Copyright (c) 2026 Noah Kim", (SKILL / "LICENSE").read_text())
         self.assertFalse((ROOT / ".claude-plugin").exists())
-        self.assertFalse((ROOT / "hooks").exists())
+        self.assertFalse((SKILL / "hooks").exists())
 
     def test_relative_instruction_links_exist(self):
         for path in (SKILL / "SKILL.md", *sorted((SKILL / "references").glob("*.md"))):
@@ -68,6 +71,8 @@ class PackageTests(unittest.TestCase):
             base = Path(temp).resolve()
             install = base / "skill installation" / "vibe-wise"
             shutil.copytree(SKILL, install)
+            self.assertFalse((install / "hooks").exists())
+            self.assertFalse((install / "session_start.py").exists())
             project = base / "target project"
             project.mkdir()
             (project / ".git").write_text("gitdir: /other/repository/worktrees/example")

@@ -97,8 +97,10 @@ editing the target project's `.gitignore`.
 “Pause learning” sets `Learning mode: paused`; “just implement this one” skips only
 this task's learning stops. Asking `$vibe-wise` to resume or learn again resumes
 without resetting.
-Across new sessions, invoke the skill again or use the optional project guidance
-shown in the repository README. This port does not install a lifecycle hook.
+Across new sessions, invoke the skill again when it was installed directly, or use
+the optional project guidance shown in the repository README. The skill works
+without hooks; only the optional plugin package can restore active context through
+its trust-reviewed SessionStart hook.
 
 ## Reset only when requested
 
