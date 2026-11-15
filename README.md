@@ -15,11 +15,10 @@
   <img src="https://img.shields.io/badge/deps-none-brightgreen.svg" alt="No dependencies">
 </p>
 
-> [!IMPORTANT]
-> **This port is archived.** [VibeWise](https://github.com/nykooi1/vibe-wise) now supports
-> Codex officially. Use the upstream plugin for Codex and Claude Code; it is maintained and
-> gets new features. This repo stays up as a record of the early community port, built
-> before official Codex support existed.
+> [!NOTE]
+> [VibeWise](https://github.com/nykooi1/vibe-wise) now supports Codex officially. For the
+> maintained version with new features, use the upstream plugin. This repo is the early
+> community port, built before official Codex support existed.
 
 A Codex port of [VibeWise](https://github.com/nykooi1/vibe-wise) by Noah Kim, the
 Claude Code plugin that helps you learn how to build while AI writes the code.
